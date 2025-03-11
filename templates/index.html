@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Tính Điểm Xét Tuyển</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .radio-group {
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC THPT CHUYÊN HÙNG VƯƠNG, BÌNH DƯƠNG</h1>
+        <form method="POST">
+            <div class="radio-group">
+                <input type="radio" name="method" value="1" id="cong" checked>
+                <label for="cong">1. Thi sinh CÓ kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label><br>
+                <input type="radio" name="method" value="2" id="khong">
+                <label for="khong">2. Thi sinh KHÔNG kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label>
+            </div>
+            <div class="form-group" id="dgnl-group">
+                <label for="diem_dgnl">Điểm Đánh giá Năng lực (Điểm Toán x2-thang 1500):</label>
+                <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl" required>
+            </div>
+            <div class="form-group">
+                <label for="diem_tnthpt">Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
+                <input type="number" step="0.01" name="diem_tnthpt" id="diem_tnthpt" required>
+            </div>
+            <div class="form-group">
+                <label for="diem_hpt">Trung bình cộng điểm TB lớp 10, 11, 12 (các môn trong tổ hợp):</label>
+                <input type="number" step="0.01" name="diem_hpt" id="diem_hpt" required>
+            </div>
+            <button type="submit">Tính điểm</button>
+        </form>
+        <div id="result">
+            {% if result %}
+                {% if result is string %}
+                    <p style="color: red;">{{ result }}</p>
+                {% else %}
+                    <h3>KẾT QUẢ</h3>
+                    <p>Điểm năng lực: {{ result.diem_nang_luc }}</p>
+                    <p>Điểm TNTHPT quy đổi: {{ result.diem_tnthpt_quy_doi }}</p>
+                    <p>Điểm học tập quy đổi: {{ result.diem_hpt_quy_doi }}</p>
+                    <p>Điểm học lực: {{ result.diem_hoc_luc }}</p>
+                    <p>Điểm xét tuyển (thang 100): {{ result.diem_xet_tuyen }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const radios = document.querySelectorAll('input[type="radio"]');
+        const dgnlGroup = document.getElementById('dgnl-group');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (document.getElementById('khong').checked) {
+                    dgnlGroup.style.display = 'none';
+                } else {
+                    dgnlGroup.style.display = 'block';
+                }
+            });
+        });
+
+        // Ẩn/hiện trường Đánh giá Năng lực khi load trang
+        if (document.getElementById('khong').checked) {
+            dgnlGroup.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
