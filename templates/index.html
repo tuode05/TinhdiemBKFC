@@ -12,14 +12,14 @@
             padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #333;
         }
@@ -59,21 +59,30 @@
             border-radius: 5px;
             display: block;
         }
+        #history {
+            margin-top: 30px;
+        }
+        .history-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC THPT CHUYÊN HÙNG VƯƠNG, BÌNH DƯƠNG</h1>
+        <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC THPT CHUYÊN HÙNG VƯƠNG BÌNH DƯƠNG</h1>
         <form method="POST">
             <div class="radio-group">
                 <input type="radio" name="method" value="1" id="cong" checked>
-                <label for="cong">1. Thi sinh CÓ kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label><br>
+                <label for="cong">1. Thí sinh CÓ kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label><br>
                 <input type="radio" name="method" value="2" id="khong">
-                <label for="khong">2. Thi sinh KHÔNG kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label>
+                <label for="khong">2. Thí sinh KHÔNG có kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label>
             </div>
             <div class="form-group" id="dgnl-group">
-                <label for="diem_dgnl">Điểm Đánh giá Năng lực (Điểm Toán x2-thang 1500):</label>
-                <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl" required>
+                <label for="diem_dgnl">Điểm Đánh giá Năng lực (tổng 1500 trong đó Toán x2):</label>
+                <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl"> <!-- Bỏ required -->
             </div>
             <div class="form-group">
                 <label for="diem_tnthpt">Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
@@ -97,6 +106,31 @@
                     <p>Điểm học lực: {{ result.diem_hoc_luc }}</p>
                     <p>Điểm xét tuyển (thang 100): {{ result.diem_xet_tuyen }}</p>
                 {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Phần hiển thị lịch sử -->
+        <div id="history">
+            <h2>LỊCH SỬ TÍNH ĐIỂM</h2>
+            {% if history %}
+                {% for item in history %}
+                    <div class="history-item">
+                        <p><strong>Thời gian:</strong> {{ item[10] }}</p>
+                        <p><strong>Phương án:</strong> {{ "CÓ" if item[1] == "1" else "KHÔNG Có" }}</p>
+                        {% if item[1] == "1" %}
+                            <p><strong>Điểm Đánh giá Năng lực:</strong> {{ item[2] }}</p>
+                        {% endif %}
+                        <p><strong>Tổng điểm 3 môn TNTHPT:</strong> {{ item[3] }}</p>
+                        <p><strong>Trung bình điểm TB lớp 10-12:</strong> {{ item[4] }}</p>
+                        <p><strong>Điểm năng lực:</strong> {{ item[5] }}</p>
+                        <p><strong>Điểm TNTHPT quy đổi:</strong> {{ item[6] }}</p>
+                        <p><strong>Điểm học tập quy đổi:</strong> {{ item[7] }}</p>
+                        <p><strong>Điểm học lực:</strong> {{ item[8] }}</p>
+                        <p><strong>Điểm xét tuyển (thang 100):</strong> {{ item[9] }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Chưa có lịch sử tính điểm.</p>
             {% endif %}
         </div>
     </div>
