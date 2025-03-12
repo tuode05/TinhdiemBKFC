@@ -18,8 +18,9 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
         }
-        h1, h2 {
+        h1, h3 {
             text-align: center;
             color: #333;
         }
@@ -31,13 +32,60 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-        input {
+        input[type="number"] {
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .radio-group {
             margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .radio-option:hover {
+            background-color: #e9e9e9;
+        }
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+        .radio-option .custom-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4CAF50;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .radio-option input[type="radio"]:checked + .custom-radio::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .radio-option input[type="radio"]:checked + .custom-radio {
+            border-color: #4CAF50;
+        }
+        .radio-option input[type="radio"]:checked + .custom-radio + span {
+            color: #4CAF50;
+            font-weight: bold;
         }
         button {
             background-color: #4CAF50;
@@ -47,6 +95,8 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            display: block;
+            margin: 0 auto;
         }
         button:hover {
             background-color: #45a049;
@@ -59,30 +109,40 @@
             border-radius: 5px;
             display: block;
         }
-        #history {
-            margin-top: 30px;
-        }
-        .history-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #f1f1f1;
-            border-radius: 5px;
+        /* Định dạng cho hình ảnh duy nhất với bo góc */
+        .header-image {
+            width: 100%;
+            max-width: 851px;
+            height: auto;
+            display: block;
+            margin: 0 auto 20px auto;
+            border-radius: 15px; /* Bo góc 15px, bạn có thể thay đổi giá trị này */
+            overflow: hidden; /* Đảm bảo nội dung hình ảnh không bị tràn ra ngoài */
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Hình ảnh duy nhất ở trên cùng -->
+        <img src="{{ url_for('static', filename='header-image.png') }}" alt="Header Image" class="header-image">
+
         <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC THPT CHUYÊN HÙNG VƯƠNG BÌNH DƯƠNG</h1>
         <form method="POST">
             <div class="radio-group">
-                <input type="radio" name="method" value="1" id="cong" checked>
-                <label for="cong">1. Thí sinh CÓ kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label><br>
-                <input type="radio" name="method" value="2" id="khong">
-                <label for="khong">2. Thí sinh KHÔNG có kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</label>
+                <label class="radio-option">
+                    <input type="radio" name="method" value="1" id="cong" checked>
+                    <span class="custom-radio"></span>
+                    <span>1. Thí sinh CÓ kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="method" value="2" id="khong">
+                    <span class="custom-radio"></span>
+                    <span>2. Thí sinh KHÔNG có kết quả thi Đánh giá Năng lực ĐHQG TPHCM 2025</span>
+                </label>
             </div>
             <div class="form-group" id="dgnl-group">
-                <label for="diem_dgnl">Điểm Đánh giá Năng lực (tổng 1500 trong đó Toán x2):</label>
-                <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl"> <!-- Bỏ required -->
+                <label for="diem_dgnl">Điểm Đánh giá Năng lực (tổng 1500 trong đó điểm Toán x2):</label>
+                <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl">
             </div>
             <div class="form-group">
                 <label for="diem_tnthpt">Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
@@ -103,34 +163,8 @@
                     <p>Điểm năng lực: {{ result.diem_nang_luc }}</p>
                     <p>Điểm TNTHPT quy đổi: {{ result.diem_tnthpt_quy_doi }}</p>
                     <p>Điểm học tập quy đổi: {{ result.diem_hpt_quy_doi }}</p>
-                    <p>Điểm học lực: {{ result.diem_hoc_luc }}</p>
-                    <p>Điểm xét tuyển (thang 100): {{ result.diem_xet_tuyen }}</p>
+                    <p>Điểm xét tuyển (thang 100, chưa tính điểm Ưu tiên): {{ result.diem_xet_tuyen }}</p>
                 {% endif %}
-            {% endif %}
-        </div>
-
-        <!-- Phần hiển thị lịch sử -->
-        <div id="history">
-            <h2>LỊCH SỬ TÍNH ĐIỂM</h2>
-            {% if history %}
-                {% for item in history %}
-                    <div class="history-item">
-                        <p><strong>Thời gian:</strong> {{ item[10] }}</p>
-                        <p><strong>Phương án:</strong> {{ "CÓ" if item[1] == "1" else "KHÔNG Có" }}</p>
-                        {% if item[1] == "1" %}
-                            <p><strong>Điểm Đánh giá Năng lực:</strong> {{ item[2] }}</p>
-                        {% endif %}
-                        <p><strong>Tổng điểm 3 môn TNTHPT:</strong> {{ item[3] }}</p>
-                        <p><strong>Trung bình điểm TB lớp 10-12:</strong> {{ item[4] }}</p>
-                        <p><strong>Điểm năng lực:</strong> {{ item[5] }}</p>
-                        <p><strong>Điểm TNTHPT quy đổi:</strong> {{ item[6] }}</p>
-                        <p><strong>Điểm học tập quy đổi:</strong> {{ item[7] }}</p>
-                        <p><strong>Điểm học lực:</strong> {{ item[8] }}</p>
-                        <p><strong>Điểm xét tuyển (thang 100):</strong> {{ item[9] }}</p>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>Chưa có lịch sử tính điểm.</p>
             {% endif %}
         </div>
     </div>
