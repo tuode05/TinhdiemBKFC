@@ -10,41 +10,25 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Hàm tạo và kết nối cơ sở dữ liệu (không cần bảng history)
-def init_db():
-    conn = sqlite3.connect('history.db')
-    c = conn.cursor()
-    conn.commit()
-    conn.close()
-
-init_db()
-
 @app.route('/', methods=['GET', 'POST'])
 def calculate_score():
     result = None
-
-    if 'user_id' not in session:
-        session['user_id'] = datetime.now().strftime('%Y%m%d%H%M%S')
 
     if request.method == 'POST':
         try:
             method = request.form.get('method')
             diem_dgnl = request.form.get('diem_dgnl')
-            
+            diem_hpt = float(request.form.get('diem_hpt')) if request.form.get('diem_hpt') else 0
+            diem_tnthpt = float(request.form.get('diem_tnthpt'))
+
             if method == '1':
                 diem_dgnl = float(diem_dgnl) if diem_dgnl else 0
-                diem_tnthpt = float(request.form.get('diem_tnthpt'))
-                diem_hpt = float(request.form.get('diem_hpt'))
-
                 diem_nang_luc = (diem_dgnl) / 15
                 diem_tnthpt_quy_doi = diem_tnthpt / 3 * 10
                 diem_hpt_quy_doi = diem_hpt * 10
                 diem_hoc_luc = (diem_nang_luc * 0.7) + (diem_tnthpt_quy_doi * 0.2) + (diem_hpt_quy_doi * 0.1)
 
             else:
-                diem_tnthpt = float(request.form.get('diem_tnthpt'))
-                diem_hpt = float(request.form.get('diem_hpt'))
-
                 diem_tnthpt_quy_doi = diem_tnthpt / 3 * 10
                 diem_hpt_quy_doi = diem_hpt * 10
                 diem_nang_luc = diem_tnthpt_quy_doi * 0.75
