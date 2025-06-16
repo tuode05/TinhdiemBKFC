@@ -182,7 +182,7 @@
                 </div>
             </div>
             <div class="form-group" id="cert-group" style="display: none;">
-                <label for="cert_score">1. Điểm chứng chỉ quốc tế:</label>
+                <label for="cert_score">1. Điểm chứng chỉ quốc tế (quy đổi thang 100):</label>
                 <select name="cert_type" id="cert_type">
                     <option value="SAT">SAT</option>
                     <option value="ACT">ACT</option>
@@ -191,7 +191,7 @@
                 </select>
                 <input type="number" step="0.01" name="cert_score" id="cert_score" placeholder="Nhập điểm chứng chỉ">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="tnthpt-group">
                 <label for="diem_tnthpt">2. Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
                 <input type="number" step="0.01" name="diem_tnthpt" id="diem_tnthpt" required>
             </div>
@@ -221,7 +221,7 @@
                     <p style="color: red;">{{ result }}</p>
                 {% else %}
                     <h3>KẾT QUẢ</h3>
-                    <p>Điểm ĐGNL quy đổi: {{ result.diem_nang_luc }}</p>
+                    <p>Điểm CCNN quy đổi: {{ result.diem_nang_luc }}</p>
                     <p>Điểm TNTHPT quy đổi: {{ result.diem_tnthpt_quy_doi }}</p>
                     <p>Điểm học tập quy đổi: {{ result.diem_hpt_quy_doi }}</p>
                     <p>Điểm xét tuyển (thang 100, chưa tính điểm cộng và điểm Ưu tiên): {{ result.diem_xet_tuyen }}</p>
@@ -233,126 +233,127 @@
         </div>
     </div>
 
-<script>
-    const radios = document.querySelectorAll('input[type="radio"]');
-    const dgnlGroup = document.getElementById('dgnl-group');
-    const certGroup = document.getElementById('cert-group');
-    const dgnlDetailed = document.getElementById('dgnl-detailed');
-    const diemHptInput = document.getElementById('diem_hpt');
-    const diemDgnlInput = document.getElementById('diem_dgnl');
-    const certScoreInput = document.getElementById('cert_score');
-    const dgnlInputs = document.querySelectorAll('.dgnl-input');
-    let isManualInput = false;
-    let isDgnlManualInput = false;
+    <script>
+        const radios = document.querySelectorAll('input[type="radio"]');
+        const dgnlGroup = document.getElementById('dgnl-group');
+        const certGroup = document.getElementById('cert-group');
+        const tnthptGroup = document.getElementById('tnthpt-group');
+        const dgnlDetailed = document.getElementById('dgnl-detailed');
+        const diemHptInput = document.getElementById('diem_hpt');
+        const diemDgnlInput = document.getElementById('diem_dgnl');
+        const certScoreInput = document.getElementById('cert_score');
+        const dgnlInputs = document.querySelectorAll('.dgnl-input');
+        let isManualInput = false;
+        let isDgnlManualInput = false;
 
-    const scoreInputs = document.querySelectorAll('.score-input');
+        const scoreInputs = document.querySelectorAll('.score-input');
 
-    // Bảng quy đổi điểm chứng chỉ với ngưỡng
-    const conversionTable = {
+        // Bảng quy đổi điểm chứng chỉ với ngưỡng
+        const conversionTable = {
             SAT: { 1600: 100, 1584: 99, 1568: 98, 1552: 97, 1536: 96, 1520: 95, 1504: 94, 1488: 93, 1472: 92, 1456: 91, 1440: 90, 1424: 89, 1408: 88, 1392: 87, 1376: 86, 1360: 85, 1344: 84, 1328: 83, 1312: 82, 1296: 81, 1280: 80, 1264: 79, 1248: 78, 1232: 77, 1216: 76, 1200: 75 },
             ACT: { 36: 100, 35: 98, 34: 95, 33: 93, 32: 90, 31: 88, 30: 86, 29: 84, 28: 82, 27: 81, 26: 78, 25: 76, 24: 74 },
             IB: { 42: 100, 41: 98, 40: 96, 39: 94, 38: 91, 37: 89, 36: 86, 35: 84, 34: 82, 33: 79, 32: 77, 31: 74, 30: 71, 29: 69, 28: 67, 27: 64, 26: 62 },
             'A-Level': { 'A*': 95, 'A': 85, 'B': 75, 'C': 65 }
-    };
+        };
 
-    // Hàm quy đổi dựa trên ngưỡng
-    function convertByThreshold(score, certType) {
-        const table = conversionTable[certType];
-        const scores = Object.keys(table).map(Number).sort((a, b) => b - a);
-        for (let i = 0; i < scores.length; i++) {
-            if (score >= scores[i]) {
-                return table[scores[i]];
+        // Hàm quy đổi dựa trên ngưỡng
+        function convertByThreshold(score, certType) {
+            const table = conversionTable[certType];
+            const scores = Object.keys(table).map(Number).sort((a, b) => b - a);
+            for (let i = 0; i < scores.length; i++) {
+                if (score >= scores[i]) {
+                    return table[scores[i]];
+                }
             }
+            return 0; // Trả về 0 nếu ngoài phạm vi
         }
-        return 0; // Trả về 0 nếu ngoài phạm vi
-    }
 
-    // Gắn sự kiện nhập trực tiếp
-    diemHptInput.addEventListener('input', () => {
-        isManualInput = true;
-        if (diemHptInput.value === '') isManualInput = false;
-    });
-
-    diemDgnlInput.addEventListener('input', () => {
-        isDgnlManualInput = true;
-        if (diemDgnlInput.value === '') isDgnlManualInput = false;
-    });
-
-    certScoreInput.addEventListener('input', () => {
-        const certType = document.getElementById('cert_type').value;
-        const score = parseFloat(certScoreInput.value) || 0;
-        const convertedScore = convertByThreshold(score, certType);
-        diemDgnlInput.value = convertedScore.toFixed(2); // Gán trực tiếp vào diem_dgnl
-    });
-
-    scoreInputs.forEach(input => input.addEventListener('input', calculateAverage));
-    dgnlInputs.forEach(input => input.addEventListener('input', calculateDgnlTotal));
-
-    radios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (document.getElementById('khong').checked) {
-                dgnlGroup.style.display = 'none';
-                certGroup.style.display = 'none';
-            } else if (document.getElementById('cong').checked) {
-                dgnlGroup.style.display = 'block';
-                certGroup.style.display = 'none';
-                if (!isDgnlManualInput) dgnlDetailed.classList.add('active');
-            } else if (document.getElementById('cert').checked) {
-                dgnlGroup.style.display = 'none';
-                certGroup.style.display = 'block';
-            }
+        // Gắn sự kiện nhập trực tiếp
+        diemHptInput.addEventListener('input', () => {
+            isManualInput = true;
+            if (diemHptInput.value === '') isManualInput = false;
         });
-    });
 
-    if (document.getElementById('khong').checked) {
-        dgnlGroup.style.display = 'none';
-        certGroup.style.display = 'none';
-    } else if (document.getElementById('cong').checked) {
-        dgnlDetailed.classList.add('active');
-    } else if (document.getElementById('cert').checked) {
-        certGroup.style.display = 'block';
-    }
+        diemDgnlInput.addEventListener('input', () => {
+            isDgnlManualInput = true;
+            if (diemDgnlInput.value === '') isDgnlManualInput = false;
+        });
 
-    function calculateDgnlTotal() {
-        if (!isDgnlManualInput && document.getElementById('cong').checked) {
-            const tv = parseFloat(document.getElementById('tv').value) || 0;
-            const ta = parseFloat(document.getElementById('ta').value) || 0;
-            const toan = parseFloat(document.getElementById('toan').value) || 0;
-            const tdkh = parseFloat(document.getElementById('tdkh').value) || 0;
-            const total = tv + ta + (toan * 2) + tdkh;
-            diemDgnlInput.value = total.toFixed(2);
+        certScoreInput.addEventListener('input', () => {
+            const certType = document.getElementById('cert_type').value;
+            const score = parseFloat(certScoreInput.value) || 0;
+            const convertedScore = convertByThreshold(score, certType);
+            diemDgnlInput.value = convertedScore.toFixed(2);
+        });
+
+        scoreInputs.forEach(input => input.addEventListener('input', calculateAverage));
+        dgnlInputs.forEach(input => input.addEventListener('input', calculateDgnlTotal));
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (document.getElementById('khong').checked) {
+                    dgnlGroup.style.display = 'none';
+                    certGroup.style.display = 'none';
+                } else if (document.getElementById('cong').checked) {
+                    dgnlGroup.style.display = 'block';
+                    certGroup.style.display = 'none';
+                    if (!isDgnlManualInput) dgnlDetailed.classList.add('active');
+                } else if (document.getElementById('cert').checked) {
+                    dgnlGroup.style.display = 'none';
+                    certGroup.style.display = 'block';
+                }
+            });
+        });
+
+        if (document.getElementById('khong').checked) {
+            dgnlGroup.style.display = 'none';
+            certGroup.style.display = 'none';
+        } else if (document.getElementById('cong').checked) {
+            dgnlDetailed.classList.add('active');
+        } else if (document.getElementById('cert').checked) {
+            certGroup.style.display = 'block';
         }
-    }
 
-    function calculateAverage() {
-        if (!isManualInput) {
-            const scores = [
-                parseFloat(document.getElementById('l10m1').value) || 0,
-                parseFloat(document.getElementById('l10m2').value) || 0,
-                parseFloat(document.getElementById('l10m3').value) || 0,
-                parseFloat(document.getElementById('l11m1').value) || 0,
-                parseFloat(document.getElementById('l11m2').value) || 0,
-                parseFloat(document.getElementById('l11m3').value) || 0,
-                parseFloat(document.getElementById('l12m1').value) || 0,
-                parseFloat(document.getElementById('l12m2').value) || 0,
-                parseFloat(document.getElementById('l12m3').value) || 0
-            ];
-            const validScores = scores.filter(score => !isNaN(score) && score >= 0);
-            if (validScores.length > 0) {
-                const average = validScores.reduce((a, b) => a + b) / validScores.length;
-                diemHptInput.value = average.toFixed(2);
-            } else {
-                diemHptInput.value = '0.00';
+        function calculateDgnlTotal() {
+            if (!isDgnlManualInput && document.getElementById('cong').checked) {
+                const tv = parseFloat(document.getElementById('tv').value) || 0;
+                const ta = parseFloat(document.getElementById('ta').value) || 0;
+                const toan = parseFloat(document.getElementById('toan').value) || 0;
+                const tdkh = parseFloat(document.getElementById('tdkh').value) || 0;
+                const total = tv + ta + (toan * 2) + tdkh;
+                diemDgnlInput.value = total.toFixed(2);
             }
         }
-    }
 
-    diemHptInput.addEventListener('focus', () => {
-        if (!isManualInput && diemHptInput.value === '0.00') diemHptInput.value = '';
-    });
-    diemHptInput.addEventListener('blur', () => {
-        if (!isManualInput && !diemHptInput.value) diemHptInput.value = '0.00';
-    });
-</script>
+        function calculateAverage() {
+            if (!isManualInput) {
+                const scores = [
+                    parseFloat(document.getElementById('l10m1').value) || 0,
+                    parseFloat(document.getElementById('l10m2').value) || 0,
+                    parseFloat(document.getElementById('l10m3').value) || 0,
+                    parseFloat(document.getElementById('l11m1').value) || 0,
+                    parseFloat(document.getElementById('l11m2').value) || 0,
+                    parseFloat(document.getElementById('l11m3').value) || 0,
+                    parseFloat(document.getElementById('l12m1').value) || 0,
+                    parseFloat(document.getElementById('l12m2').value) || 0,
+                    parseFloat(document.getElementById('l12m3').value) || 0
+                ];
+                const validScores = scores.filter(score => !isNaN(score) && score >= 0);
+                if (validScores.length > 0) {
+                    const average = validScores.reduce((a, b) => a + b) / validScores.length;
+                    diemHptInput.value = average.toFixed(2);
+                } else {
+                    diemHptInput.value = '0.00';
+                }
+            }
+        }
+
+        diemHptInput.addEventListener('focus', () => {
+            if (!isManualInput && diemHptInput.value === '0.00') diemHptInput.value = '';
+        });
+        diemHptInput.addEventListener('blur', () => {
+            if (!isManualInput && !diemHptInput.value) diemHptInput.value = '0.00';
+        });
+    </script>
 </body>
 </html>
