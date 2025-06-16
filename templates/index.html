@@ -124,9 +124,20 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
+        .dgnl-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
         .score-label {
             font-weight: normal;
             font-size: 0.9em;
+        }
+        .detailed-input {
+            display: none;
+        }
+        .detailed-input.active {
+            display: block;
         }
     </style>
 </head>
@@ -137,7 +148,7 @@
 
         <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC - THPT CHUYÊN HÙNG VƯƠNG, BÌNH DƯƠNG</h1>
 
-        <form method="POST" oninput="calculateAverage()">
+        <form method="POST" oninput="calculateScores()">
             <div class="radio-group">
                 <label class="radio-option">
                     <input type="radio" name="method" value="1" id="cong" checked>
@@ -151,8 +162,17 @@
                 </label>
             </div>
             <div class="form-group" id="dgnl-group">
-                <label for="diem_dgnl">1. Điểm Đánh giá Năng lực (tổng 1500 trong đó điểm Toán x2):</label>
+                <label for="diem_dgnl">1. Điểm Đánh giá Năng lực (tổng 1500, Toán x2):</label>
                 <input type="number" step="0.01" name="diem_dgnl" id="diem_dgnl">
+                <div class="form-group detailed-input" id="dgnl-detailed">
+                    <label>Hoặc nhập chi tiết:</label>
+                    <div class="dgnl-grid">
+                        <label class="score-label">Tiếng Việt: <input type="number" step="0.01" id="tv" class="dgnl-input"></label>
+                        <label class="score-label">Tiếng Anh: <input type="number" step="0.01" id="ta" class="dgnl-input"></label>
+                        <label class="score-label">Toán: <input type="number" step="0.01" id="toan" class="dgnl-input"></label>
+                        <label class="score-label">Tư duy KH: <input type="number" step="0.01" id="tdkh" class="dgnl-input"></label>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="diem_tnthpt">2. Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
@@ -162,7 +182,7 @@
             <!-- Điểm trung bình (giữ sau Tổng điểm TNTHPT) -->
             <div class="form-group">
                 <label>3. Điền TRỰC TIẾP Điểm trung bình 3 năm lớp 10, 11, 12 (tổ hợp 3 môn):</label>
-                <input type="number" step="0.01" name="diem_hpt" id="diem_hpt">
+                <input type="number" step="0.01" name="diem_hpt" id="diem_hpt" value="0.00">
             </div>
 
             <!-- Nhập điểm học bạ chi tiết (giữ trước nút Tính điểm) -->
@@ -192,14 +212,13 @@
                     <p>Điểm ĐGNL quy đổi: {{ result.diem_nang_luc }}</p>
                     <p>Điểm TNTHPT quy đổi: {{ result.diem_tnthpt_quy_doi }}</p>
                     <p>Điểm học tập quy đổi: {{ result.diem_hpt_quy_doi }}</p>
-                    <p>Điểm xét tuyển (thang 100, chưa tính điểm Ưu tiên): {{ result.diem_xet_tuyen }}</p>
+                    <p>Điểm xét tuyển (thang 100, chưa tính điểm cộng và điểm Ưu tiên): {{ result.diem_xet_tuyen }}</p>
                 {% endif %}
             {% endif %}
         </div>
         <!-- Thêm phần thông tin người thực hiện -->
         <div class="footer">
-            <p>Thực hiện bởi: <strong>Hoàng Minh Tú</strong></p>
-            <p>Email: <a href="mailto:tu.hoangminh@hcmut.edu.vn">tu.hoangminh@hcmut.edu.vn</a></p>
+            <p>Mọi thông tin chi tiết liên hệ qua fanpage: <a href="https://www.facebook.com/bkfc.chuyenhungvuong.binhduong" target="_blank">BK FC - THPT Chuyên Hùng Vương, Bình Dương</a></p>
         </div>
     </div>
 
@@ -207,7 +226,11 @@
         const radios = document.querySelectorAll('input[type="radio"]');
         const dgnlGroup = document.getElementById('dgnl-group');
         const diemHptInput = document.getElementById('diem_hpt');
+        const diemDgnlInput = document.getElementById('diem_dgnl');
+        const dgnlDetailed = document.getElementById('dgnl-detailed');
+        const dgnlInputs = document.querySelectorAll('.dgnl-input');
         let isManualInput = false;
+        let isDgnlManualInput = false;
 
         // Lấy tất cả các ô input của 9 cột điểm
         const scoreInputs = document.querySelectorAll('.score-input');
@@ -215,26 +238,39 @@
         // Gắn sự kiện để kiểm tra khi người dùng nhập trực tiếp vào diem_hpt
         diemHptInput.addEventListener('input', () => {
             isManualInput = true; // Đánh dấu là người dùng đã nhập trực tiếp
-        });
-
-        // Reset isManualInput khi xóa giá trị trong diem_hpt
-        diemHptInput.addEventListener('change', () => {
-            if (!diemHptInput.value) {
+            if (diemHptInput.value === '') {
                 isManualInput = false; // Reset khi để trống
             }
         });
 
-        // Gắn sự kiện input cho từng ô chi tiết để tính lại trung bình
+        // Gắn sự kiện để kiểm tra khi người dùng nhập trực tiếp vào diem_dgnl
+        diemDgnlInput.addEventListener('input', () => {
+            isDgnlManualInput = true; // Đánh dấu là người dùng đã nhập trực tiếp
+            dgnlDetailed.classList.remove('active'); // Ẩn chi tiết khi nhập trực tiếp
+            if (diemDgnlInput.value === '') {
+                isDgnlManualInput = false; // Reset khi để trống
+            }
+        });
+
+        // Gắn sự kiện input cho từng ô chi tiết để tính lại
         scoreInputs.forEach(input => {
             input.addEventListener('input', calculateAverage);
         });
 
+        dgnlInputs.forEach(input => {
+            input.addEventListener('input', calculateDgnlTotal);
+        });
+
+        // Hiển thị/ẩn phần chi tiết Đánh giá Năng lực khi có/không kết quả
         radios.forEach(radio => {
             radio.addEventListener('change', () => {
                 if (document.getElementById('khong').checked) {
                     dgnlGroup.style.display = 'none';
                 } else {
                     dgnlGroup.style.display = 'block';
+                    if (!isDgnlManualInput) {
+                        dgnlDetailed.classList.add('active'); // Hiển thị chi tiết khi chọn "CÓ" và chưa nhập trực tiếp
+                    }
                 }
             });
         });
@@ -242,36 +278,59 @@
         // Ẩn/hiện trường Đánh giá Năng lực khi load trang
         if (document.getElementById('khong').checked) {
             dgnlGroup.style.display = 'none';
+        } else {
+            dgnlDetailed.classList.add('active'); // Hiển thị chi tiết khi load với "CÓ"
+        }
+
+        // Hàm tính tổng điểm Đánh giá Năng lực từ chi tiết
+        function calculateDgnlTotal() {
+            if (!isDgnlManualInput && document.getElementById('cong').checked) {
+                const tv = parseFloat(document.getElementById('tv').value) || 0;
+                const ta = parseFloat(document.getElementById('ta').value) || 0;
+                const toan = parseFloat(document.getElementById('toan').value) || 0;
+                const tdkh = parseFloat(document.getElementById('tdkh').value) || 0;
+                const total = tv + ta + (toan * 2) + tdkh;
+                diemDgnlInput.value = total.toFixed(2);
+            }
         }
 
         // Hàm tính trung bình 9 cột điểm
         function calculateAverage() {
-            // Nếu người dùng đã nhập trực tiếp vào diem_hpt và không xóa, không tính lại
-            if (isManualInput && diemHptInput.value) {
-                return;
-            }
+            if (!isManualInput) {
+                const scores = [
+                    parseFloat(document.getElementById('l10m1').value) || 0,
+                    parseFloat(document.getElementById('l10m2').value) || 0,
+                    parseFloat(document.getElementById('l10m3').value) || 0,
+                    parseFloat(document.getElementById('l11m1').value) || 0,
+                    parseFloat(document.getElementById('l11m2').value) || 0,
+                    parseFloat(document.getElementById('l11m3').value) || 0,
+                    parseFloat(document.getElementById('l12m1').value) || 0,
+                    parseFloat(document.getElementById('l12m2').value) || 0,
+                    parseFloat(document.getElementById('l12m3').value) || 0
+                ];
 
-            const scores = [
-                parseFloat(document.getElementById('l10m1').value) || 0,
-                parseFloat(document.getElementById('l10m2').value) || 0,
-                parseFloat(document.getElementById('l10m3').value) || 0,
-                parseFloat(document.getElementById('l11m1').value) || 0,
-                parseFloat(document.getElementById('l11m2').value) || 0,
-                parseFloat(document.getElementById('l11m3').value) || 0,
-                parseFloat(document.getElementById('l12m1').value) || 0,
-                parseFloat(document.getElementById('l12m2').value) || 0,
-                parseFloat(document.getElementById('l12m3').value) || 0
-            ];
-
-            const validScores = scores.filter(score => !isNaN(score) && score >= 0);
-            if (validScores.length > 0) {
-                const average = validScores.reduce((a, b) => a + b) / validScores.length;
-                diemHptInput.value = average.toFixed(2);
-                isManualInput = false; // Reset khi tính từ chi tiết
-            } else {
-                diemHptInput.value = '';
+                const validScores = scores.filter(score => !isNaN(score) && score >= 0);
+                if (validScores.length > 0) {
+                    const average = validScores.reduce((a, b) => a + b) / validScores.length;
+                    diemHptInput.value = average.toFixed(2);
+                } else {
+                    diemHptInput.value = '0.00';
+                }
             }
         }
+
+        // Đảm bảo giá trị mặc định không bị khóa
+        diemHptInput.addEventListener('focus', () => {
+            if (!isManualInput && diemHptInput.value === '0.00') {
+                diemHptInput.value = '';
+            }
+        });
+
+        diemHptInput.addEventListener('blur', () => {
+            if (!isManualInput && !diemHptInput.value) {
+                diemHptInput.value = '0.00';
+            }
+        });
     </script>
 </body>
 </html>
