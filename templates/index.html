@@ -143,6 +143,14 @@
         .detailed-input.active, .cert-input.active {
             display: block;
         }
+        .cert-input-number, #a_level_score {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +159,7 @@
         <h1>TÍNH ĐIỂM XÉT TUYỂN CÙNG BK FC - THPT CHUYÊN HÙNG VƯƠNG, BÌNH DƯƠNG</h1>
 
         <form method="POST" oninput="calculateScores()">
+            <label style="font-weight: bold; margin-bottom: 10px; display: block;">Chọn đối tượng:</label>
             <div class="radio-group">
                 <label class="radio-option">
                     <input type="radio" name="method" value="1" id="cong">
@@ -183,13 +192,20 @@
             </div>
             <div class="form-group" id="cert-group" style="display: none;">
                 <label for="cert_score">1. Điểm chứng chỉ quốc tế (quy đổi thang 100):</label>
-                <select name="cert_type" id="cert_type">
+                <select name="cert_type" id="cert_type" onchange="toggleCertInput()">
                     <option value="SAT">SAT</option>
                     <option value="ACT">ACT</option>
                     <option value="IB">IB</option>
                     <option value="A-Level">A-Level</option>
                 </select>
-                <input type="number" step="0.01" name="cert_score" id="cert_score" placeholder="Nhập điểm chứng chỉ">
+                <input type="number" step="0.01" name="cert_score" id="cert_score" placeholder="Nhập điểm chứng chỉ" class="cert-input-number">
+                <select name="a_level_score" id="a_level_score" style="display: none;">
+                    <option value="">Chọn điểm A-Level</option>
+                    <option value="A*">A*</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
             </div>
             <div class="form-group" id="tnthpt-group">
                 <label for="diem_tnthpt">2. Tổng điểm 3 môn TNTHPT trong tổ hợp:</label>
@@ -242,6 +258,8 @@
         const diemHptInput = document.getElementById('diem_hpt');
         const diemDgnlInput = document.getElementById('diem_dgnl');
         const certScoreInput = document.getElementById('cert_score');
+        const aLevelScoreSelect = document.getElementById('a_level_score');
+        const certTypeSelect = document.getElementById('cert_type');
         const dgnlInputs = document.querySelectorAll('.dgnl-input');
         let isManualInput = false;
         let isDgnlManualInput = false;
@@ -250,7 +268,7 @@
 
         // Bảng quy đổi điểm chứng chỉ với ngưỡng
         const conversionTable = {
-            SAT: { 1600: 100, 1584: 99, 1568: 98, 1552: 97, 1536: 96, 1520: 95, 1504: 94, 1488: 93, 1472: 92, 1456: 91, 1440: 90, 1424: 89, 1408: 88, 1392: 87, 1376: 86, 1360: 85, 1344: 84, 1328: 83, 1312: 82, 1296: 81, 1280: 80, 1264: 79, 1248: 78, 1232: 77, 1216: 76, 1200: 75, 1184:74 },
+            SAT: { 1600: 100, 1584: 99, 1568: 98, 1552: 97, 1536: 96, 1520: 95, 1504: 94, 1488: 93, 1472: 92, 1456: 91, 1440: 90, 1424: 89, 1408: 88, 1392: 87, 1376: 86, 1360: 85, 1344: 84, 1328: 83, 1312: 82, 1296: 81, 1280: 80, 1264: 79, 1248: 78, 1232: 77, 1216: 76, 1200: 75, 1184: 74 },
             ACT: { 36: 100, 35: 98, 34: 95, 33: 93, 32: 90, 31: 88, 30: 86, 29: 84, 28: 82, 27: 81, 26: 78, 25: 76, 24: 74 },
             IB: { 42: 100, 41: 98, 40: 96, 39: 94, 38: 91, 37: 89, 36: 86, 35: 84, 34: 82, 33: 79, 32: 77, 31: 74, 30: 71, 29: 69, 28: 67, 27: 64, 26: 62 },
             'A-Level': { 'A*': 95, 'A': 85, 'B': 75, 'C': 65 }
@@ -259,6 +277,9 @@
         // Hàm quy đổi dựa trên ngưỡng
         function convertByThreshold(score, certType) {
             const table = conversionTable[certType];
+            if (certType === 'A-Level') {
+                return table[score] || 0; // Trả về điểm quy đổi hoặc 0 nếu không hợp lệ
+            }
             const scores = Object.keys(table).map(Number).sort((a, b) => b - a);
             for (let i = 0; i < scores.length; i++) {
                 if (score >= scores[i]) {
@@ -266,6 +287,18 @@
                 }
             }
             return 0; // Trả về 0 nếu ngoài phạm vi
+        }
+
+        // Hàm chuyển đổi hiển thị input cho chứng chỉ
+        function toggleCertInput() {
+            const certType = certTypeSelect.value;
+            if (certType === 'A-Level') {
+                certScoreInput.style.display = 'none';
+                aLevelScoreSelect.style.display = 'block';
+            } else {
+                certScoreInput.style.display = 'block';
+                aLevelScoreSelect.style.display = 'none';
+            }
         }
 
         // Gắn sự kiện nhập trực tiếp
@@ -279,11 +312,24 @@
             if (diemDgnlInput.value === '') isDgnlManualInput = false;
         });
 
+        // Xử lý input điểm chứng chỉ (SAT, ACT, IB)
         certScoreInput.addEventListener('input', () => {
-            const certType = document.getElementById('cert_type').value;
-            const score = parseFloat(certScoreInput.value) || 0;
-            const convertedScore = convertByThreshold(score, certType);
-            diemDgnlInput.value = convertedScore.toFixed(2);
+            const certType = certTypeSelect.value;
+            if (certType !== 'A-Level') {
+                const score = parseFloat(certScoreInput.value) || 0;
+                const convertedScore = convertByThreshold(score, certType);
+                diemDgnlInput.value = convertedScore.toFixed(2);
+            }
+        });
+
+        // Xử lý chọn điểm A-Level
+        aLevelScoreSelect.addEventListener('change', () => {
+            const certType = certTypeSelect.value;
+            const score = aLevelScoreSelect.value;
+            if (certType === 'A-Level' && score) {
+                const convertedScore = convertByThreshold(score, certType);
+                diemDgnlInput.value = convertedScore.toFixed(2);
+            }
         });
 
         scoreInputs.forEach(input => input.addEventListener('input', calculateAverage));
@@ -305,6 +351,7 @@
             });
         });
 
+        // Khởi tạo trạng thái ban đầu
         if (document.getElementById('khong').checked) {
             dgnlGroup.style.display = 'none';
             certGroup.style.display = 'none';
@@ -313,6 +360,12 @@
         } else if (document.getElementById('cert').checked) {
             certGroup.style.display = 'block';
         }
+
+        // Gắn sự kiện change cho cert_type
+        certTypeSelect.addEventListener('change', toggleCertInput);
+
+        // Gọi toggleCertInput khi trang tải
+        document.addEventListener('DOMContentLoaded', toggleCertInput);
 
         function calculateDgnlTotal() {
             if (!isDgnlManualInput && document.getElementById('cong').checked) {
